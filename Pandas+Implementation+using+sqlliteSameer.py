@@ -106,3 +106,28 @@ pd.read_sql_query("select * from airlines where id = 19846;",conn)
 
 
 
+routes = pd.read_sql_query("""
+                           select cast(sa.longitude as float) as source_lon, 
+                           cast(sa.latitude as float) as source_lat,
+                           cast(da.longitude as float) as dest_lon,
+                           cast(da.latitude as float) as dest_lat
+                           from routes 
+                           inner join airports sa on
+                           sa.id = routes.source_id
+                           inner join airports da on
+                           da.id = routes.dest_id;
+                           """, 
+                           conn)
+m = Basemap(projection='merc',llcrnrlat=-80,urcrnrlat=80,llcrnrlon=-180,urcrnrlon=180,lat_ts=20,resolution='c')
+m.drawcoastlines()
+for name, row in routes[:3000].iterrows():
+    if abs(row["source_lon"] - row["dest_lon"]) < 90:
+        # Draw a great circle between source and dest airports.
+        m.drawgreatcircle(
+            row["source_lon"], 
+            row["source_lat"], 
+            row["dest_lon"],
+            row["dest_lat"],
+            linewidth=1,
+            color='b'
+        )
